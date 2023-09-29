@@ -1,9 +1,8 @@
 import { Component } from 'react';
-import { nanoid } from 'nanoid';
 import { Container } from './App.styled';
 import { ContactForm } from 'components/ContactForm/ContactForm';
 import { Filter } from 'components/Filter/Filter';
-import { ContactsList } from 'components/ContactsList/ContactsList';
+import { ContactsList, ContactItem } from 'components/ContactsList';
 
 export class App extends Component {
   state = {
@@ -16,23 +15,30 @@ export class App extends Component {
     filter: '',
   };
 
-  addContact = e => {
-    e.preventDefault();
-    if (this.state.contacts.some(({ name }) => name === e.target.name.value)) return alert(`${e.target.name.value} is already in contacts`);
-    const contact = Object.fromEntries(new FormData(e.target).entries());
-    contact.id = nanoid();
-    this.setState(({ contacts }) => ({ contacts: [...contacts, contact] }));
-    e.target.reset();
+  addContact = contact => {
+    if (this.state.contacts.some(({ name }) => name === contact.name)) return alert(`${contact.name} is already in contacts`);
+    (this.setState(({ contacts }) => ({ contacts: [...contacts, contact] })));
+    return true
   };
 
-  handleFilter = (e) => this.setState({
-    filter: e.target.value.toLowerCase(),
-  });
-  
-  filteredContacts = () =>
-    this.state.contacts.filter(({ name }) => name.toLowerCase().includes(this.state.filter));
+  handleFilter = e =>
+    this.setState({
+      filter: e.target.value.toLowerCase(),
+    });
 
-  deleteContact = contactId => this.setState(({ contacts }) => ({contacts: contacts.filter(({ id }) => id !== contactId)}));
+  filteredContacts = () => {
+    const { filter, contacts } = this.state;
+    if (filter) {
+      return contacts.filter(({ name }) => name.toLowerCase().includes(filter));
+    } else {
+      return contacts;
+    }
+  };
+
+  deleteContact = contactId =>
+    this.setState(({ contacts }) => ({
+      contacts: contacts.filter(({ id }) => id !== contactId),
+    }));
 
   render() {
     return (
@@ -40,15 +46,21 @@ export class App extends Component {
         <h1 className="title">Phonebook</h1>
         <Container>
           <div className="form-container">
-            <ContactForm handleSubmit={this.addContact} />
+            <ContactForm addContact={this.addContact} />
             <Filter val={this.state.filter} handleFilter={this.handleFilter} />
           </div>
           <div className="contacts-container">
             <h2 className="title">Contacts</h2>
-            <ContactsList
-              contacts={this.filteredContacts()}
-              handleDelete={this.deleteContact}
-            />
+            <ContactsList>
+              {this.filteredContacts().map(({ id, name, number }) => (
+                <ContactItem
+                  key={id}
+                  name={name}
+                  number={number}
+                  handleDelete={() => this.deleteContact(id)}
+                />
+              ))}
+            </ContactsList>
           </div>
         </Container>
       </>

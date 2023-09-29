@@ -7,6 +7,3 @@ flex-direction: column;
 gap: 8px;
 list-style: circle;
 `
-
-export const ContactItem = styled.li`
-`
